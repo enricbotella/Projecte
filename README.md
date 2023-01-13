@@ -13,18 +13,22 @@ Real Time Audio streaming using UDP.
 
 ## Usage
 
-To set wifi credentials go to swc_wifi->station_ap.c:
 
-##     Change the below entries to strings with
-##     the config you want - ie #define WIFI_SSID "ADD YOUR SSID"
+
+##    SET WIFI CREDENTIALS 
+
+Go to swc_wifi->station_ap.c:
+
+Change the below entries to strings with   the config you want - ie #define WIFI_SSID "ADD YOUR SSID"
 
     #define WIFI_SSID      "ADD YOUR SSID"
     #define WIFI_PASS      "ADD_YOUR_PASSWORD"
 
-To set Host and Port IPgot to swc_udp -> include -> swc_udp.h
+##    SET HOST IP AND PORT
+Go to swc_udp -> include -> swc_udp.h
 
-## Change the below entries
-## 
+Change the below entries
+
     #define HOST_IP_ADDR "ADD_HOST_IP_HERE"
     #define PORT (4000u)
 
