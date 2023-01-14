@@ -29,23 +29,38 @@ bytesToSend = b'\x00'
 
 postion = b''
 
+address = None
+
 # Set up the pyaudio recording
 
-CHUNK =  16 #frames per buffer in outgoing stream to udp. 
+CHUNK = 300  #frames per buffer in outgoing stream to udp. 
             #Small as possible to avoid delays
 FORMAT = pyaudio.paInt16 # 16bits per sample pcm
 CHANNELS = 1 # Mono audio
 RATE = 16000 #16Khz
 input_p = pyaudio.PyAudio() #Create the pyaudio object
 output_p = pyaudio.PyAudio() #Create the pyaudio object
-CHUNK2 = 6000  # Frames per buffer to store data received from esp32
+CHUNK2 = 2048  # Frames per buffer to store data received from esp32
+
+
+def callback(in_data, frame_count, time_info, status):
+    
+    global address
+    global server_state
+    
+    if address is not None and server_state == 3:
+        UDPServerSocket.sendto(b'\x01\x03' + in_data, address)
+
+    return (None, pyaudio.paContinue)
 
 #Stream that reads from pc mic and writes to udp  
 input_stream = input_p.open(format=FORMAT,   
                 channels=CHANNELS,
                 rate=RATE,
                 input=True,
-                frames_per_buffer=CHUNK)
+                frames_per_buffer=CHUNK,
+                stream_callback=callback)
+
 
 # Stream that reads from udp incoming packets and writes to speakers  
 output_stream = output_p.open(format=pyaudio.paInt16,  
@@ -53,6 +68,7 @@ output_stream = output_p.open(format=pyaudio.paInt16,
                             rate=RATE,
                             output=True,
                             frames_per_buffer=CHUNK2)
+
 
 #This is the handler for the keyboard interrupt. It will shutdown 
 # the server and close the streams
@@ -88,25 +104,25 @@ while(True):
 
 
     if(message[:2] == b'\x01\x03'):
+        server_state = 3
         #Writes audio to speakers
         output_stream.write(message[2:])
 
 
         #Writes 230 frames of audio from the PC mic  
         # to the payload of udp stream
-        bytesToSend = b'\x01\x03' + input_stream.read(230) 
-        
-        server_state = 3
-
+        #bytesToSend = b'\x01\x03' + input_stream.read(230) 
 
 
     elif(message[:2] == b'\x01\x05'):
+
+        server_state = 3
         #write the audio to the speakers 
         output_stream.write(message[23:]) 
         #Saves position
         position = message[2:21]
          #Writes 230 frames of audio to the  payload of udp stream
-        bytesToSend = b'\x01\x03' + input_stream.read(230) 
+        #bytesToSend = b'\x01\x03' + input_stream.read(230) 
 
         #print("0x",position) 
 
@@ -152,6 +168,6 @@ while(True):
 
         bytesToSend = b'\x03\x02'
 
-
-    UDPServerSocket.sendto(bytesToSend, address)
+    if server_state != 3:
+        UDPServerSocket.sendto(bytesToSend, address)
 
