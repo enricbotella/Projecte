@@ -49,7 +49,9 @@ void app_main(void)
     
     init_gpio();
     xTaskCreate(vTask_uart,"swc_uart",4096,NULL,5,NULL);
-    xTaskCreate(udp_client_task, "udp_client", 8192, NULL, 5, NULL);
+    //xTaskCreate(udp_client_task, "udp_client", 8192, NULL, 5, NULL);
+    xTaskCreate(vTaskSendUDP, "udp_send_task", 4096, NULL, 5, NULL);
+    xTaskCreate(vTaskReceiveUDP,"udp_receive_task",4096,NULL,5,NULL);
 
     fsm_state = FSM_INIT;
 }
